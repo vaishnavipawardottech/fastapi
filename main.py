@@ -1,9 +1,21 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Annotated
+import models
+from database import engine, SessionLocal
+from sqlalchemy.orm import Session
 
 
 app = FastAPI()
+models.Base.metadata.create_all(bind=engine)
+
+class choiceBase(BaseModel):
+    choice_text: str
+    is_correct: bool
+
+class questionBase(BaseModel):
+    question_text: str
+    choices: List[choiceBase]
 
 class Tea(BaseModel):
     id: int
@@ -40,3 +52,12 @@ def delete_tea(tea_id: int):
             deleted_tea = teas.pop(index)
             return deleted_tea
     return {"error": "Tea not found"}
+
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
